@@ -1,0 +1,26 @@
+# Shared
+numpy
+pandas
+pillow
+opencv-python
+scikit-learn
+matplotlib
+pyyaml
+
+# Model
+torch
+torchvision
+transformers
+timm
+peft
+wandb
+
+# Data
+diffusers
+accelerate
+
+# Product
+fastapi
+uvicorn[standard]
+gradio
+python-multipart

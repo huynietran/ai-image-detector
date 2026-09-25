@@ -1,0 +1,30 @@
+# Data — never commit actual images/datasets, only manifests and .gitkeep
+data/raw/real/*
+!data/raw/real/.gitkeep
+data/raw/ai/*
+!data/raw/ai/.gitkeep
+data/matched/*
+!data/matched/.gitkeep
+data/degradation_suite/*
+!data/degradation_suite/.gitkeep
+data/stress_set/*
+!data/stress_set/.gitkeep
+
+# Checkpoints — large binary files, use W&B/artifact storage instead
+model/checkpoints/*
+!model/checkpoints/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+venv/
+.venv/
+*.egg-info/
+
+# Env / secrets
+.env
+*.key
+
+# OS
+.DS_Store

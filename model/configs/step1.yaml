@@ -1,0 +1,14 @@
+# Config for step 1 — see model/steps/README.md
+seed: 42
+
+data:
+  manifest: data/manifests/manifest.csv
+  matched_dir: data/matched/
+
+backbone:
+  name: dinov2_vitb14   # dinov2 | clip | siglip; swap per step 4
+  frozen: true          # set false from step 5 onward (LoRA)
+
+output:
+  checkpoint: model/checkpoints/step1.pt
+  results_log: evaluation/results/step1.json
