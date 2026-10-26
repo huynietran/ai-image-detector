@@ -4,10 +4,20 @@ seed: 42
 data:
   manifest: data/manifests/manifest.csv
   matched_dir: data/matched/
+  embeddings_dir: model/embeddings/   # gitignored cache, one .npz per backbone/version
 
 backbone:
-  name: dinov2_vitb14   # dinov2 | clip | siglip; swap per step 4
-  frozen: true          # set false from step 5 onward (LoRA)
+  name: dinov2_vitb14   # see BACKBONES in shared/model_interface.py
+  deltas_from: null     # or model/checkpoints/step5.pt
+
+train:
+  exclude_generators: [vae_reconstruction]   # only step 6 adds the VAE set
+  include_generators: []   # [vae_reconstruction] if step 6 helped
+  augment_copies: 0
+
+run:
+  batch_size: 16      # images per batch (x5 crops); lower if the GPU runs out of memory
+  num_workers: 2
 
 output:
   checkpoint: model/checkpoints/step7.pt
