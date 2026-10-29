@@ -24,3 +24,6 @@ fastapi
 uvicorn[standard]
 gradio
 python-multipart
+
+c2pa-python
+httpx

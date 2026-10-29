@@ -30,3 +30,6 @@ venv/
 
 # OS
 .DS_Store
+
+# Product test fixture (downloaded, third-party)
+product/provenance/samples/*
