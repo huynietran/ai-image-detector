@@ -1,0 +1,50 @@
+Audited 900 images  (300 AI, 600 real)
+
+is_ai    ai  real
+format           
+JPEG    300   600 
+
+is_ai   ai  real
+mode            
+RGB    300   600 
+
+is_ai      ai  real
+has_exif           
+0         300   600 
+
+is_ai                     ai        real
+width      count  300.000000  600.000000
+           mean   512.000000  512.000000
+           std      0.000000    0.000000
+           min    512.000000  512.000000
+           25%    512.000000  512.000000
+           50%    512.000000  512.000000
+           75%    512.000000  512.000000
+           max    512.000000  512.000000
+height     count  300.000000  600.000000
+           mean   512.000000  512.000000
+           std      0.000000    0.000000
+           min    512.000000  512.000000
+           25%    512.000000  512.000000
+           50%    512.000000  512.000000
+           75%    512.000000  512.000000
+           max    512.000000  512.000000
+file_kb    count  300.000000  600.000000
+           mean    51.369391   68.399370
+           std     24.907256   28.608401
+           min      5.923828   17.385742
+           25%     33.901123   45.875977
+           50%     45.812500   62.975098
+           75%     62.473633   87.706299
+           max    148.253906  163.865234
+mean_quant count  300.000000  600.000000
+           mean    25.350495   24.917956
+           std     10.645439   10.394992
+           min      7.242188    7.242188
+           25%     17.312500   15.914062
+           50%     25.984375   24.523438
+           75%     34.703125   33.187500
+           max     42.929688   42.929688 
+
+Metadata-only shortcut AUC (cross-validated): 0.635
+SHORTCUT RISK (> 0.6): the label is predictable from file properties alone. Look at the tables above for the column that differs and tell the Data lead.
