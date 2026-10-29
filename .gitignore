@@ -13,6 +13,8 @@ data/stress_set/*
 # Checkpoints — large binary files, use W&B/artifact storage instead
 model/checkpoints/*
 !model/checkpoints/.gitkeep
+model/embeddings/*
+!model/embeddings/.gitkeep
 
 # Python
 __pycache__/

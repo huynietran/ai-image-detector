@@ -4,10 +4,22 @@ seed: 42
 data:
   manifest: data/manifests/manifest.csv
   matched_dir: data/matched/
+  embeddings_dir: model/embeddings/   # gitignored cache, one .npz per backbone/version
 
 backbone:
-  name: dinov2_vitb14   # dinov2 | clip | siglip; swap per step 4
-  frozen: true          # set false from step 5 onward (LoRA)
+  name: dinov2_vitb14   # see BACKBONES in shared/model_interface.py
+
+train:
+  exclude_generators: [vae_reconstruction]   # only step 6 adds the VAE set
+  augment_copies: 0   # 0 = step 2's setup; set to step 3's value if augmentation was kept
+
+run:
+  batch_size: 16      # images per batch (x5 crops); lower if the GPU runs out of memory
+  num_workers: 2
+
+compare:
+  backbones: [dinov2_vitb14, dinov2_vitl14, clip_vitb16, siglip_vitb16]
+  select_on: auc       # auc (clean) or jpeg50_auc
 
 output:
   checkpoint: model/checkpoints/step4.pt

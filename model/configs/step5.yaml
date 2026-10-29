@@ -4,10 +4,31 @@ seed: 42
 data:
   manifest: data/manifests/manifest.csv
   matched_dir: data/matched/
+  embeddings_dir: model/embeddings/   # gitignored cache, one .npz per backbone/version
 
 backbone:
-  name: dinov2_vitb14   # dinov2 | clip | siglip; swap per step 4
-  frozen: true          # set false from step 5 onward (LoRA)
+  name: dinov2_vitb14   # see BACKBONES in shared/model_interface.py
+
+train:
+  exclude_generators: [vae_reconstruction]   # only step 6 adds the VAE set
+  augment_copies: 0   # augmented versions for the final logistic regression
+
+run:
+  batch_size: 16      # images per batch (x5 crops); lower if the GPU runs out of memory
+  num_workers: 2
+
+lora:
+  r: 8
+  alpha: 16
+  dropout: 0.1
+  last_n_blocks: 4
+  epochs: 3            # fixed in advance; never chosen on held-out scores
+  batch_size: 32
+  lr: 1.0e-4
+  head_lr: 1.0e-3
+  weight_decay: 0.01
+  augment: true        # step 3's augmentation on the training crops
+  max_steps: null      # set a small number for a quick test
 
 output:
   checkpoint: model/checkpoints/step5.pt
