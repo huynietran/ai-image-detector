@@ -1,0 +1,6 @@
+{
+  "checkpoint": "model/checkpoints/step2.pt",
+  "fpr": 0.01,
+  "threshold": 0.9838401124912591,
+  "n_real": 300
+}

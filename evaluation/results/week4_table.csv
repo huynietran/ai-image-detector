@@ -1,0 +1,17 @@
+generator,degradation,n_ai,n_real,auc,tpr_at_1pct_fpr
+ALL,clean,300,300,0.875,0.097
+flux,clean,300,300,0.875,0.097
+ALL,jpeg_75,300,300,0.868,0.083
+flux,jpeg_75,300,300,0.868,0.083
+ALL,jpeg_50,300,300,0.841,0.103
+flux,jpeg_50,300,300,0.841,0.103
+ALL,jpeg_30,300,300,0.825,0.107
+flux,jpeg_30,300,300,0.825,0.107
+ALL,resize_0.5x,300,300,0.808,0.113
+flux,resize_0.5x,300,300,0.808,0.113
+ALL,resize_1.5x,300,300,0.876,0.143
+flux,resize_1.5x,300,300,0.876,0.143
+ALL,crop,300,300,0.846,0.113
+flux,crop,300,300,0.846,0.113
+ALL,screenshot,300,300,0.875,0.067
+flux,screenshot,300,300,0.875,0.067
