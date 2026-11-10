@@ -7,6 +7,7 @@ detect.py      # the ONE function (provenance first, model second) the API and d
 provenance/    # C2PA / EXIF / PNG-chunk checks — runs BEFORE the model
 api/           # Image in, score + which signals fired, out
 demo/          # Gradio demo
+web/           # HumansRUS website: python product/web/serve.py
 ```
 
 ## Request flow
