@@ -225,7 +225,9 @@ footer .brand span{font-size:.95rem}
   </div>
 </main>
 
+<script src="config.js"></script>
 <script>
+const API = String(window.HUMANSRUS_API || "").replace(/\/+$/, "");
 let THRESHOLD = 0.9838;          // the team's flag threshold
 const DISAGREE_GAP = 0.5;
 const ROWS = [["Original",0.875],["JPEG quality 75",0.868],["JPEG quality 50",0.841],["JPEG quality 30",0.825],["Shrunk to half size",0.808],["Enlarged 1.5×",0.876],["Cropped",0.846],["Screenshot",0.875]];
@@ -287,6 +289,12 @@ async function check(f){
     $("fname").innerHTML = `<b>${esc(name)}</b> · ${img.naturalWidth} × ${img.naturalHeight} px`;
     img.parentElement.insertAdjacentHTML("beforeend", cropBoxes(img.naturalWidth, img.naturalHeight).map(([l,t,w,h]) => `<div class="crop" style="left:${l}%;top:${t}%;width:${w}%;height:${h}%" aria-hidden="true"></div>`).join(""));
   };
+  if (!live && API) {
+    message("", "Waking up the checker…", "It sleeps when nobody has used it for a while. This can take a minute the first time.");
+    live = await wake(my);
+    if (my !== token) return;
+    if (!live) { message("v-mid", "The checker is offline right now", "Please try again in a few minutes."); return; }
+  }
   if (!live) {
     message("v-mid", "The checker isn't running", "HumansRUS checks images on your own computer. Start it from the team's project folder with <kbd>python product/web/serve.py</kbd>, then open <kbd>http://127.0.0.1:8000</kbd> in your browser.");
     return;
@@ -295,7 +303,7 @@ async function check(f){
   $("photo").classList.add("busy");
   try {
     const fd = new FormData(); fd.append("file", f, name);
-    const res = await fetch("/score", { method:"POST", body:fd });
+    const res = await fetch(API + "/score", { method:"POST", body:fd });
     let body = {}; try { body = await res.json(); } catch (_) {}
     if (my !== token) return;
     if (!res.ok) throw new Error(body.detail || `Something went wrong (error ${res.status}).`);
@@ -321,13 +329,23 @@ $("rows").innerHTML = ROWS.map(([n, a]) => `<div class="r"><span>${n}</span><spa
 function placeFlag(){ $("flagMk").style.left = (THRESHOLD * 100) + "%"; $("flagLbl").textContent = "flagged at " + THRESHOLD.toFixed(2); }
 placeFlag();
 
+async function ping(){
+  try {
+    const h = await fetch(API + "/health", { cache:"no-store" });
+    if (!h.ok || !(await h.json()).ok) return false;
+    try { const t = await (await fetch(API + "/threshold")).json(); if (t.threshold) { THRESHOLD = t.threshold; placeFlag(); } } catch (_) {}
+    return true;
+  } catch (_) { return false; }
+}
+async function wake(my){
+  for (let i = 0; i < 30 && my === token; i++) {   // up to about 2.5 minutes
+    if (await ping()) return true;
+    await new Promise(r => setTimeout(r, 5000));
+  }
+  return false;
+}
 (async () => {
   if (!/^https?:$/.test(location.protocol)) return;
-  try {
-    const h = await fetch("/health", { cache:"no-store" });
-    if (!h.ok || !(await h.json()).ok) return;
-    live = true;
-    try { const t = await (await fetch("/threshold")).json(); if (t.threshold) { THRESHOLD = t.threshold; placeFlag(); } } catch (_) {}
-  } catch (_) {}
+  live = await ping();
 })();
 </script>

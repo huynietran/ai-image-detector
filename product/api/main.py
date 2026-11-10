@@ -22,7 +22,7 @@ from PIL import Image
 
 from product.detect import detect
 
-app = FastAPI(title="AI Image Detector")
+app = FastAPI(title="HumansRUS")
 
 
 @app.get("/health")

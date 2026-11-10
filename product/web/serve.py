@@ -14,6 +14,9 @@ Optional environment variables:
   CHECKPOINT_PATH   default model/checkpoints/step2.pt
   USE_DUMMY_MODEL=1 run without a checkpoint (scores are fake and labelled)
   PORT              default 8000
+  HOST              default 127.0.0.1 (this computer only); the hosted checker uses 0.0.0.0
+  ALLOWED_ORIGINS   extra sites allowed to call the checker, comma-separated
+                    (https://humansrus.vercel.app and its preview links are always allowed)
 """
 import json
 import os
@@ -32,8 +35,19 @@ os.chdir(REPO)                     # detect.py's default CHECKPOINT_PATH is rela
 sys.path.insert(0, str(REPO))
 
 import uvicorn                                # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from fastapi.staticfiles import StaticFiles   # noqa: E402
 from product.api.main import app              # noqa: E402
+
+
+# let the Vercel page (a different site) call /score, /health and /threshold
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[o.strip() for o in os.environ.get("ALLOWED_ORIGINS", "").split(",") if o.strip()],
+    allow_origin_regex=r"https://humansrus[a-z0-9-]*\.vercel\.app",
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/threshold")
@@ -45,7 +59,8 @@ def threshold():
 app.mount("/", StaticFiles(directory=WEB, html=True), name="web")
 
 if __name__ == "__main__":
+    host = os.environ.get("HOST", "127.0.0.1")
     port = int(os.environ.get("PORT", "8000"))
     model = "dummy model (fake scores)" if os.environ.get("USE_DUMMY_MODEL") == "1" else os.environ.get("CHECKPOINT_PATH", "model/checkpoints/step2.pt")
-    print(f"HumansRUS: {model} | threshold {os.environ.get('AI_THRESHOLD', '0.5')} | http://127.0.0.1:{port}")
-    uvicorn.run(app, host="127.0.0.1", port=port)   # this computer only
+    print(f"HumansRUS: {model} | threshold {os.environ.get('AI_THRESHOLD', '0.5')} | http://{host}:{port}")
+    uvicorn.run(app, host=host, port=port)   # 127.0.0.1 = this computer only
