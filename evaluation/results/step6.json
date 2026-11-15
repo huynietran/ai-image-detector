@@ -1,0 +1,41 @@
+{
+  "n_train_images": 900,
+  "train_versions": 1,
+  "n_ai": 300,
+  "n_real": 300,
+  "auc": 0.8921111111111111,
+  "tpr_at_1pct_fpr": 0.35,
+  "jpeg50": {
+    "n_ai": 300,
+    "n_real": 300,
+    "auc": 0.7814666666666665,
+    "tpr_at_1pct_fpr": 0.17666666666666667
+  },
+  "step": 6,
+  "backbone": "clip_vitl14",
+  "vae_generators": [
+    "vae_reconstruction"
+  ],
+  "n_vae_images": 300,
+  "augment_copies": 0,
+  "without_vae": {
+    "n_train_images": 600,
+    "train_versions": 1,
+    "n_ai": 300,
+    "n_real": 300,
+    "auc": 0.9749888888888889,
+    "tpr_at_1pct_fpr": 0.74,
+    "jpeg50": {
+      "n_ai": 300,
+      "n_real": 300,
+      "auc": 0.8824,
+      "tpr_at_1pct_fpr": 0.31333333333333335
+    }
+  },
+  "held_out_generators": [
+    "flux"
+  ],
+  "n_held_out_images": 600,
+  "checkpoint": "model/checkpoints/step6.pt",
+  "checkpoint_sha256": "702b1254656815847fd171ef61199d41cf4d8c822a805bc82fafad3afa3295fe"
+}

@@ -1,5 +1,10 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>HumansRUS</title>
-<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Upload an image to check whether it's AI-generated. An early research model that only flags images it is very sure about.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap">
 <style>
@@ -58,6 +63,8 @@ nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px
 .btn.primary:hover{background:var(--deep)}
 .btn.ghost{background:var(--white);color:var(--deep);border-color:var(--line)}
 .btn.ghost:hover{border-color:var(--signal)}
+.acts{display:flex;flex-wrap:wrap;gap:10px}
+#stampHint{margin:10px 0 0;font-size:.85rem;color:var(--ink-3)}
 .hint{font-size:.86rem;color:var(--ink-3)}
 kbd{font:500 .78rem var(--mono);padding:1px 6px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;background:var(--white);color:var(--ink)}
 
@@ -132,6 +139,8 @@ footer .brand span{font-size:.95rem}
 @media (prefers-reduced-transparency:reduce){nav{background:var(--white);-webkit-backdrop-filter:none;backdrop-filter:none}}
 @media (prefers-contrast:more){:root{--line:#7fa6ae;--ink-2:#1c3940;--ink-3:#2c4a51}}
 </style>
+</head>
+<body>
 
 <a class="skip" href="#check">Skip to the checker</a>
 
@@ -167,7 +176,11 @@ footer .brand span{font-size:.95rem}
         <div class="side">
           <div class="photo" id="photo"><div class="scan" aria-hidden="true"></div></div>
           <p class="fname" id="fname"></p>
-          <button class="btn ghost" id="again" type="button">Check another image</button>
+          <div class="acts">
+            <button class="btn ghost" id="again" type="button">Check another image</button>
+            <button class="btn ghost" id="stamp" type="button" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M7 11l5 5 5-5"/><path d="M4 20h16"/></svg>Download with stamp</button>
+          </div>
+          <p class="hint" id="stampHint" hidden>Saves a copy with the HumansRUS logo, this result and today's date in the corner. The stamp is a label, not proof: anyone can crop it out.</p>
         </div>
         <div class="side" aria-live="polite">
           <span class="label">Result</span>
@@ -190,17 +203,17 @@ footer .brand span{font-size:.95rem}
       <div class="sechead"><h2 id="howH">How it works</h2><p>Every image goes through the same three steps.</p></div>
       <div class="steps">
         <div class="step"><span class="n">1</span><h3>File history</h3><p>We first look inside the file for signs it was made by AI: Content Credentials (C2PA), EXIF and XMP fields, and PNG text. Only a claim of AI generation counts, because camera tags are easy to fake.</p></div>
-        <div class="step"><span class="n">2</span><h3>Five close-ups</h3><p>If the file says nothing, we cut five 224-pixel squares from the centre and the four corners, at full resolution, and pass each one through a frozen DINOv2 vision model.</p></div>
+        <div class="step"><span class="n">2</span><h3>Five close-ups</h3><p>If the file says nothing, we cut five 224-pixel squares from the centre and the four corners, at full resolution, and pass each one through a frozen <span id="bbName">DINOv2</span> vision model.</p></div>
         <div class="step"><span class="n">3</span><h3>One score</h3><p>A classifier scores each square and we average the five. At 0.98 or above the image is flagged; from 0.5 it's inconclusive; below that it isn't flagged.</p></div>
       </div>
     </section>
 
     <section class="sec" id="results" aria-labelledby="resH">
-      <div class="sechead"><h2 id="resH">How well it works</h2><p>We trained on 300 Stable Diffusion images and 300 real photos, then tested on 300 images from Flux, a generator the model had never seen, and 300 more real photos.</p></div>
+      <div class="sechead"><h2 id="resH">How well it works</h2><p id="trainTxt">We trained on 300 Stable Diffusion images and 300 real photos, then tested on 300 images from Flux, a generator the model had never seen, and 300 more real photos.</p></div>
       <div class="stats">
-        <div class="stat"><b>0.875</b><span>Area under the curve on the Flux test. 1 is perfect and 0.5 is a coin flip.</span></div>
-        <div class="stat"><b>0.841</b><span>The same test after heavy JPEG compression (quality 50), like a typical re-upload.</span></div>
-        <div class="stat"><b>1 in 8</b><span>Flux images caught at our strict setting, which wrongly flags about 1 in 100 real photos.</span></div>
+        <div class="stat"><b id="sAuc">0.875</b><span>Area under the curve on the Flux test. 1 is perfect and 0.5 is a coin flip.</span></div>
+        <div class="stat"><b id="sJpeg">0.841</b><span>The same test after heavy JPEG compression (quality 50), like a typical re-upload.</span></div>
+        <div class="stat"><b id="sTpr">1 in 8</b><span>Flux images caught at our strict setting, which wrongly flags about 1 in 100 real photos.</span></div>
       </div>
       <div class="rows">
         <div class="cap"><span>Area under the curve after common edits</span><span>0.5 = coin flip · 1.0 = perfect</span></div>
@@ -214,7 +227,7 @@ footer .brand span{font-size:.95rem}
         <li>File history is a claim, not a measurement. Tags can be added to real photos and removed from AI ones.</li>
         <li>Content Credentials are accepted unless they're marked invalid; we don't yet check who signed them.</li>
         <li>In our Flux test, AI files were smaller on average than real photos (51 KB vs 70 KB), so that score may be slightly high.</li>
-        <li>A few real photos score like AI, which is why the flag line sits as high as 0.98. Most AI images won't be flagged.</li>
+        <li id="limFlag">A few real photos score like AI, which is why the flag line sits as high as 0.98. Most AI images won't be flagged.</li>
         <li>"Not flagged" never proves an image is real. New AI tools can slip past any detector.</li>
       </ul>
     </section>
@@ -230,11 +243,11 @@ footer .brand span{font-size:.95rem}
 const API = String(window.HUMANSRUS_API || "").replace(/\/+$/, "");
 let THRESHOLD = 0.9838;          // the team's flag threshold
 const DISAGREE_GAP = 0.5;
-const ROWS = [["Original",0.875],["JPEG quality 75",0.868],["JPEG quality 50",0.841],["JPEG quality 30",0.825],["Shrunk to half size",0.808],["Enlarged 1.5×",0.876],["Cropped",0.846],["Screenshot",0.875]];
+let ROWS = [["Original",0.875],["JPEG quality 75",0.868],["JPEG quality 50",0.841],["JPEG quality 30",0.825],["Shrunk to half size",0.808],["Enlarged 1.5×",0.876],["Cropped",0.846],["Screenshot",0.875]];
 const NAMES = ["Centre","Top left","Top right","Bottom left","Bottom right"];
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let live = false, token = 0, current = null;
+let live = false, token = 0, current = null, lastFile = { name:"image", type:"" };
 
 /* result wording follows the team's demo */
 function describe(d){
@@ -252,7 +265,8 @@ function describe(d){
 }
 
 function show(d){
-  current = d;
+  current = d; d.__name = lastFile.name; d.__type = lastFile.type;
+  setStamp(d.checkpoint_id !== "dummy");
   $("photo").classList.remove("busy");
   const r = describe(d), model = d.decided_by === "model";
   $("verdict").className = "verdict " + r.cls; $("verdict").innerHTML = `<h3>${esc(r.head)}</h3>`;
@@ -266,8 +280,46 @@ function show(d){
   $("cropBlock").hidden = !(model && cs.length);
   $("crops").innerHTML = NAMES.map((n, i) => `<div><span>${n}</span><b>${cs[i] == null ? "–" : cs[i].toFixed(2)}</b></div>`).join("");
 }
+/* ---- logo stamp: drawn onto a downloaded copy only, never onto the image being scored ---- */
+const LOGO_SVG = document.querySelector(".hero .mark").outerHTML
+  .replace('class="mark"', 'xmlns="http://www.w3.org/2000/svg" width="128" height="128"').replace(/currentColor/g, "#0e8fa3");
+function stampLabel(d){
+  if (d.decided_by === "provenance") return "Metadata says AI-generated";
+  if (d.score >= THRESHOLD) return "Flagged: likely AI-generated";
+  if (THRESHOLD > 0.5 && d.score >= 0.5) return "Inconclusive";
+  return "Not flagged";
+}
+function loadImg(src){ return new Promise((ok, bad) => { const i = new Image(); i.onload = () => ok(i); i.onerror = bad; i.src = src; }); }
+async function stampedCopy(){
+  const d = current, src = $("img"); if (!d || !src) return;
+  const [img, logo] = await Promise.all([loadImg(src.src), loadImg("data:image/svg+xml;charset=utf-8," + encodeURIComponent(LOGO_SVG))]);
+  try { await document.fonts.ready; } catch (_) {}
+  const W = img.naturalWidth, H = img.naturalHeight, c = document.createElement("canvas");
+  c.width = W; c.height = H;
+  const g = c.getContext("2d"); g.drawImage(img, 0, 0);
+  const u = Math.max(14, Math.round(Math.min(W, H) * 0.032));          // text size scales with the image
+  const date = new Date().toLocaleDateString("en-US", { year:"numeric", month:"short", day:"numeric" });
+  const line1 = "Checked by HumansRUS", line2 = [stampLabel(d), d.decided_by === "model" ? "score " + d.score.toFixed(2) : null, date].filter(Boolean).join(" · ");
+  g.font = `600 ${u}px Sora, Inter, system-ui, sans-serif`; const w1 = g.measureText(line1).width;
+  g.font = `500 ${Math.round(u * .78)}px Inter, system-ui, sans-serif`; const w2 = g.measureText(line2).width;
+  const pad = Math.round(u * .6), ls = Math.round(u * 2.1), bw = pad * 3 + ls + Math.max(w1, w2), bh = pad * 2 + ls;
+  const x = W - bw - pad, y = H - bh - pad, r = Math.round(u * .5);
+  g.fillStyle = "rgba(255,255,255,.9)"; g.strokeStyle = "rgba(13,43,51,.18)"; g.lineWidth = Math.max(1, u / 14);
+  g.beginPath(); g.roundRect ? g.roundRect(x, y, bw, bh, r) : g.rect(x, y, bw, bh); g.fill(); g.stroke();
+  g.drawImage(logo, x + pad, y + pad, ls, ls);
+  g.textBaseline = "alphabetic"; g.fillStyle = "#0d2b33";
+  g.font = `600 ${u}px Sora, Inter, system-ui, sans-serif`; g.fillText(line1, x + pad * 2 + ls, y + pad + ls * .44);
+  g.fillStyle = "#405d65"; g.font = `500 ${Math.round(u * .78)}px Inter, system-ui, sans-serif`; g.fillText(line2, x + pad * 2 + ls, y + pad + ls * .9);
+  const png = /png|webp|gif/i.test(current.__type || ""), type = png ? "image/png" : "image/jpeg";
+  const blob = await new Promise(ok => c.toBlob(ok, type, .92));
+  const a = document.createElement("a"), base = (current.__name || "image").replace(/\.[^.]+$/, "");
+  a.href = URL.createObjectURL(blob); a.download = `${base}-humansrus.${png ? "png" : "jpg"}`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+function setStamp(on){ $("stamp").hidden = !on; $("stampHint").hidden = !on; }
+
 function message(cls, head, why){
-  current = null; $("photo").classList.remove("busy");
+  current = null; setStamp(false); $("photo").classList.remove("busy");
   $("verdict").className = "verdict " + cls; $("verdict").innerHTML = `<h3>${head}</h3>`;
   $("why").innerHTML = why; $("num").textContent = "–"; $("meter").hidden = true; $("cropBlock").hidden = true;
 }
@@ -282,6 +334,7 @@ async function check(f){
   $("empty").hidden = true; $("done").hidden = false;
   if (!f.type.startsWith("image/")) { $("photo").innerHTML = '<div class="scan" aria-hidden="true"></div>'; $("fname").textContent = f.name || ""; message("v-flag", "That file isn't an image", "Choose a JPG, PNG or WebP file."); $("again").focus(); return; }
   const name = f.name || "Pasted image", url = URL.createObjectURL(f);
+  lastFile = { name, type: f.type || "" }; setStamp(false);
   $("photo").innerHTML = `<div class="frame"><img id="img" src="${url}" alt="The image you chose"></div><div class="scan" aria-hidden="true"></div>`;
   $("fname").innerHTML = `<b>${esc(name)}</b>`;
   const img = $("img");
@@ -312,12 +365,13 @@ async function check(f){
 }
 function reset(){
   token++; current = null;
-  $("done").hidden = true; $("empty").hidden = false; $("file").value = ""; $("choose").focus();
+  setStamp(false); $("done").hidden = true; $("empty").hidden = false; $("file").value = ""; $("choose").focus();
 }
 
 $("choose").onclick = () => $("file").click();
 $("file").addEventListener("change", e => check(e.target.files[0]));
 $("again").onclick = reset;
+$("stamp").onclick = () => stampedCopy().catch(() => message("v-flag", "We couldn't make the stamped copy", "Please try again."));
 const box = $("check"), empty = $("empty");
 ["dragenter","dragover"].forEach(t => box.addEventListener(t, e => { e.preventDefault(); empty.classList.add("over"); }));
 ["dragleave","drop"].forEach(t => box.addEventListener(t, () => empty.classList.remove("over")));
@@ -325,7 +379,25 @@ box.addEventListener("drop", e => { e.preventDefault(); check(e.dataTransfer.fil
 document.addEventListener("paste", e => { const f = [...(e.clipboardData?.files || [])].find(x => x.type.startsWith("image/")); if (f) { e.preventDefault(); check(f); } });
 document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("done").hidden) reset(); });
 
-$("rows").innerHTML = ROWS.map(([n, a]) => `<div class="r"><span>${n}</span><span class="t" aria-hidden="true"><i style="width:${(a - .5) / .5 * 100}%"></i></span><b>${a.toFixed(3)}</b></div>`).join("");
+function drawRows(){ $("rows").innerHTML = ROWS.map(([n, a]) => `<div class="r"><span>${n}</span><span class="t" aria-hidden="true"><i style="width:${Math.max(0, (a - .5) / .5 * 100)}%"></i></span><b>${a.toFixed(3)}</b></div>`).join(""); }
+drawRows();
+/* results.json is written by model/run_improvements.py --adopt; without it the Week 4 numbers above stay */
+(async () => {
+  try {
+    const r = await fetch("results.json", { cache:"no-store" }); if (!r.ok) return;
+    const j = await r.json(); if (!Array.isArray(j.rows) || !j.rows.length) return;
+    ROWS = j.rows; drawRows();
+    const get = n => (ROWS.find(x => x[0] === n) || [])[1];
+    if (get("Original") != null) $("sAuc").textContent = get("Original").toFixed(3);
+    if (get("JPEG quality 50") != null) $("sJpeg").textContent = get("JPEG quality 50").toFixed(3);
+    const t = j.tpr_at_1pct_fpr;
+    if (t > 0) $("sTpr").textContent = t < 0.34 ? `1 in ${Math.round(1 / t)}` : `${Math.round(t * 10)} in 10`;
+    const names = { dinov2_vitb14:"DINOv2", dinov2_vitl14:"DINOv2 (large)", clip_vitb16:"CLIP", clip_vitl14:"CLIP (large)", siglip_vitb16:"SigLIP" };
+    if (names[j.backbone]) $("bbName").textContent = names[j.backbone];
+    if (t > 0) $("limFlag").textContent = "A few real photos score like AI, so the flag line is set where only about 1 in 100 real photos crosses it. " + (t < 0.5 ? "Most AI images won't be flagged." : `About ${Math.round((1 - t) * 10)} in 10 Flux images still slipped through in our test, and other generators may do better or worse.`);
+    if (j.vae_set) $("trainTxt").textContent = "We trained on 300 Stable Diffusion images, 300 real photos and the same 300 photos passed through an image generator's encoder, then tested on 300 images from Flux, a generator the model had never seen, and 300 more real photos.";
+  } catch (_) {}
+})();
 function placeFlag(){ $("flagMk").style.left = (THRESHOLD * 100) + "%"; $("flagLbl").textContent = "flagged at " + THRESHOLD.toFixed(2); }
 placeFlag();
 
@@ -349,3 +421,5 @@ async function wake(my){
   live = await ping();
 })();
 </script>
+</body>
+</html>

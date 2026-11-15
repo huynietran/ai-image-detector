@@ -1,0 +1,40 @@
+{
+  "backbone": "clip_vitl14",
+  "rows": [
+    [
+      "Original",
+      0.975
+    ],
+    [
+      "JPEG quality 75",
+      0.948
+    ],
+    [
+      "JPEG quality 50",
+      0.882
+    ],
+    [
+      "JPEG quality 30",
+      0.884
+    ],
+    [
+      "Shrunk to half size",
+      0.921
+    ],
+    [
+      "Enlarged 1.5\u00d7",
+      0.984
+    ],
+    [
+      "Cropped",
+      0.969
+    ],
+    [
+      "Screenshot",
+      0.978
+    ]
+  ],
+  "tpr_at_1pct_fpr": 0.74,
+  "vae_set": false,
+  "augmented": false
+}

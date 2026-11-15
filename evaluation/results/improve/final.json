@@ -1,0 +1,5 @@
+{
+  "final": "step4",
+  "backbone": "clip_vitl14",
+  "augment_copies": 0
+}

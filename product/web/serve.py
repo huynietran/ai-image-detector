@@ -8,10 +8,11 @@ Then open http://127.0.0.1:8000  (API docs stay at /docs).
 It reuses product/api/main.py unchanged (same /score and /health) and adds:
   * GET /threshold  -> the flagging cut-off the page shows,
   * the page itself at /.
-AI_THRESHOLD is read from evaluation/results/threshold.json unless you set it yourself.
+AI_THRESHOLD, and the checkpoint it was measured on, are read from
+evaluation/results/threshold.json unless you set them yourself.
 
 Optional environment variables:
-  CHECKPOINT_PATH   default model/checkpoints/step2.pt
+  CHECKPOINT_PATH   default: the checkpoint named in threshold.json (else model/checkpoints/step2.pt)
   USE_DUMMY_MODEL=1 run without a checkpoint (scores are fake and labelled)
   PORT              default 8000
   HOST              default 127.0.0.1 (this computer only); the hosted checker uses 0.0.0.0
@@ -27,9 +28,14 @@ WEB = Path(__file__).resolve().parent
 REPO = WEB.parents[1]
 THRESHOLD_FILE = REPO / "evaluation" / "results" / "threshold.json"
 
-if THRESHOLD_FILE.exists() and "AI_THRESHOLD" not in os.environ:
-    # must be set before product.detect is imported
-    os.environ["AI_THRESHOLD"] = str(json.loads(THRESHOLD_FILE.read_text())["threshold"])
+if THRESHOLD_FILE.exists():
+    # must be set before product.detect is imported. The threshold belongs to one checkpoint,
+    # so use that checkpoint too unless CHECKPOINT_PATH says otherwise.
+    _t = json.loads(THRESHOLD_FILE.read_text())
+    if "AI_THRESHOLD" not in os.environ:
+        os.environ["AI_THRESHOLD"] = str(_t["threshold"])
+    if "CHECKPOINT_PATH" not in os.environ and (REPO / _t.get("checkpoint", "")).is_file():
+        os.environ["CHECKPOINT_PATH"] = _t["checkpoint"]
 
 os.chdir(REPO)                     # detect.py's default CHECKPOINT_PATH is relative to the repo root
 sys.path.insert(0, str(REPO))
