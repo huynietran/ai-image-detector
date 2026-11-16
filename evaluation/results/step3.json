@@ -1,0 +1,37 @@
+{
+  "n_train_images": 600,
+  "train_versions": 3,
+  "n_ai": 300,
+  "n_real": 300,
+  "auc": 0.8616166666666667,
+  "tpr_at_1pct_fpr": 0.18666666666666668,
+  "jpeg50": {
+    "n_ai": 300,
+    "n_real": 300,
+    "auc": 0.8394222222222223,
+    "tpr_at_1pct_fpr": 0.18333333333333332
+  },
+  "step": 3,
+  "backbone": "dinov2_vitb14",
+  "augment_copies": 2,
+  "baseline": {
+    "n_train_images": 600,
+    "train_versions": 1,
+    "n_ai": 300,
+    "n_real": 300,
+    "auc": 0.875361111111111,
+    "tpr_at_1pct_fpr": 0.12333333333333334,
+    "jpeg50": {
+      "n_ai": 300,
+      "n_real": 300,
+      "auc": 0.8411777777777778,
+      "tpr_at_1pct_fpr": 0.11
+    }
+  },
+  "held_out_generators": [
+    "flux"
+  ],
+  "n_held_out_images": 600,
+  "checkpoint": "model/checkpoints/step3.pt",
+  "checkpoint_sha256": "dce57e6362f467dad061f4b261e01cab9ce0e30a05acf48a6c4656210b695710"
+}

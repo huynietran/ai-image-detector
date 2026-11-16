@@ -67,7 +67,7 @@ demo = gr.Interface(
     fn=classify,
     inputs=gr.Image(type="filepath"),
     outputs=[gr.Markdown(), gr.Textbox(label="Why")],
-    title="AI Image Detector",
+    title="HumansRUS",
     description="Upload an image to check whether it's AI-generated. This is an early research "
                 "model: it only flags images it is very sure about.",
     flagging_mode="never",

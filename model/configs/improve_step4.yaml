@@ -1,0 +1,21 @@
+# Written by model/run_improvements.py
+seed: 42
+data:
+  manifest: data/manifests/manifest.csv
+  matched_dir: data/matched/
+  embeddings_dir: model/embeddings/
+backbone:
+  name: dinov2_vitb14
+train:
+  exclude_generators: [vae_reconstruction]
+  vae_generators: [vae_reconstruction]
+  augment_copies: 0
+run:
+  batch_size: 16
+  num_workers: 0
+compare:
+  backbones: [dinov2_vitb14, clip_vitb16, clip_vitl14]
+  select_on: auc
+output:
+  checkpoint: model/checkpoints/step4.pt
+  results_log: evaluation/results/step4.json

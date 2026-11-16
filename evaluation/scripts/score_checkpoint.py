@@ -16,6 +16,8 @@ Evaluation and Product -- if the numbers disagree, compare these first):
     whole image (images with a short side < 224 px are upscaled to 224 first),
     ImageNet mean/std normalization, DINOv2 CLS token per crop, classifier
     probability per crop, image score = mean of the 5 probabilities.
+    DINOv2 uses ImageNet mean/std and the CLS token; CLIP and SigLIP use their
+    own mean/std and the vision tower's pooler_output (model/steps/README.md).
 
 Usage:
     python evaluation/scripts/score_checkpoint.py \
@@ -31,7 +33,7 @@ import numpy as np
 import torch
 from PIL import Image
 from sklearn.metrics import roc_auc_score, roc_curve
-from transformers import AutoModel
+from transformers import AutoModel, CLIPVisionModel, SiglipVisionModel
 
 # Make `shared/` importable when run directly as
 # `python evaluation/scripts/score_checkpoint.py` from the repo root.
@@ -40,8 +42,11 @@ from shared.splits import get_split, load_manifest  # noqa: E402
 
 CROP = 224
 CROPS_NAME = "center+4corners@224"
-MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
+MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)    # ImageNet (DINOv2)
 STD = np.array([0.229, 0.224, 0.225], dtype=np.float32)
+CLIP_MEAN = np.array([0.4815, 0.4578, 0.4082], dtype=np.float32)
+CLIP_STD = np.array([0.2686, 0.2613, 0.2758], dtype=np.float32)
+HALF = np.array([0.5, 0.5, 0.5], dtype=np.float32)            # SigLIP
 
 # model/configs/*.yaml refer to backbones by short name (e.g. "dinov2_vitb14").
 # Map those to the actual Hugging Face Hub id so this script can load them.
@@ -49,7 +54,18 @@ BACKBONE_HF_IDS = {
     "dinov2_vits14": "facebook/dinov2-small",
     "dinov2_vitb14": "facebook/dinov2-base",
     "dinov2_vitl14": "facebook/dinov2-large",
+    "clip_vitb16": "openai/clip-vit-base-patch16",
+    "clip_vitl14": "openai/clip-vit-large-patch14",
+    "siglip_vitb16": "google/siglip-base-patch16-224",
 }
+
+
+def backbone_kind(backbone_id: str) -> str:
+    """dinov2 | clip | siglip, from the Hugging Face id."""
+    for kind in ("siglip", "clip", "dinov2"):
+        if kind in backbone_id.lower():
+            return kind
+    raise ValueError(f"Don't know how to embed with backbone {backbone_id!r}")
 
 
 def resolve_backbone_id(name: str) -> str:
@@ -62,9 +78,11 @@ def compute_auc_and_tpr_at_fpr(y_true, y_scores, target_fpr: float = 0.01):
     Pitfalls: accuracy alone hides false positives on real photos."""
     auc = roc_auc_score(y_true, y_scores)
     fpr, tpr, _ = roc_curve(y_true, y_scores)
-    idx = np.searchsorted(fpr, target_fpr)
-    idx = min(idx, len(tpr) - 1)
-    return {"auc": auc, "tpr_at_fpr": float(tpr[idx]), "target_fpr": target_fpr}
+    # Best TPR among operating points whose FPR does not exceed the target.
+    # (The old np.searchsorted lookup could land one point too early when the
+    # target FPR is hit exactly, e.g. 3/300 real images = 1%, and under-report.)
+    ok = fpr <= target_fpr + 1e-9
+    return {"auc": auc, "tpr_at_fpr": float(tpr[ok].max()), "target_fpr": target_fpr}
 
 
 def load_checkpoint(path: str) -> dict:
@@ -98,8 +116,9 @@ def _get_backbone(backbone_id: str):
     """Own copy of the embedding pipeline -- intentionally duplicated from
     model/, not imported, so a bug there can't hide a bug here."""
     if backbone_id not in _backbone_cache:
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        model = AutoModel.from_pretrained(backbone_id).to(device).eval()
+        device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+        loader = {"dinov2": AutoModel, "clip": CLIPVisionModel, "siglip": SiglipVisionModel}[backbone_kind(backbone_id)]
+        model = loader.from_pretrained(backbone_id).to(device).eval()
         _backbone_cache[backbone_id] = (model, device)
     return _backbone_cache[backbone_id]
 
@@ -118,13 +137,16 @@ def native_crops(image: Image.Image) -> list[Image.Image]:
 
 
 def embed_crops(image: Image.Image, backbone_id: str) -> np.ndarray:
-    """-> [5, hidden] CLS embeddings, one per crop."""
+    """-> [5, hidden] embeddings, one per crop (CLS for DINOv2, pooler_output for CLIP/SigLIP)."""
     model, device = _get_backbone(backbone_id)
-    arr = np.stack([(np.asarray(c, dtype=np.float32) / 255.0 - MEAN) / STD for c in native_crops(image)])
+    kind = backbone_kind(backbone_id)
+    mean, std = {"dinov2": (MEAN, STD), "clip": (CLIP_MEAN, CLIP_STD), "siglip": (HALF, HALF)}[kind]
+    arr = np.stack([(np.asarray(c, dtype=np.float32) / 255.0 - mean) / std for c in native_crops(image)])
     batch = torch.from_numpy(arr).permute(0, 3, 1, 2).contiguous().to(device)
     with torch.no_grad():
         out = model(pixel_values=batch)
-    return out.last_hidden_state[:, 0, :].float().cpu().numpy()
+    emb = out.last_hidden_state[:, 0, :] if kind == "dinov2" else out.pooler_output
+    return emb.float().cpu().numpy()
 
 
 def score_pil_image(image: Image.Image, backbone_id: str, clf) -> float:

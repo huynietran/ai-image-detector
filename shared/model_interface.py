@@ -156,7 +156,9 @@ class Backbone:
             raise ValueError(f"backbone '{name}' needs weight_deltas (a step-5 checkpoint)")
         self.name, self.spec = name, BACKBONES[key]
         self.kind, self.mean, self.std = self.spec["kind"], self.spec["mean"], self.spec["std"]
-        self.device = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
+        if device is None:   # Apple-silicon Macs use the GPU through MPS
+            device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+        self.device = torch.device(device)
         self.model = _hf_model(self.spec)
         if weight_deltas:
             params = dict(self.model.named_parameters())
