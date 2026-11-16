@@ -94,7 +94,7 @@ cloudflared_bin() {
     mkdir -p "$dir"
     os="$(uname -s | tr '[:upper:]' '[:lower:]')"
     arch="$(uname -m)"; [ "$arch" = "x86_64" ] && arch=amd64; [ "$arch" = "aarch64" ] && arch=arm64
-    say "Downloading cloudflared (once) for the public link"
+    say "Downloading cloudflared (once) for the public link" >&2
     if [ "$os" = "darwin" ]; then
       curl -fsSL "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-darwin-$arch.tgz" | tar -xz -C "$dir"
     else
